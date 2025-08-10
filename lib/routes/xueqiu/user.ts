@@ -63,7 +63,14 @@ async function handler(ctx) {
         });
         await mainPage.waitForFunction(() => document.readyState === 'complete');
 
-        const apiUrl = `${rootUrl}/v4/statuses/user_timeline.json?user_id=${id}&type=${type}`;
+        const pageUrl = new URL(mainPage.url());
+        const md5Key = [...pageUrl.searchParams.keys()].find((key) => key.startsWith('md5__'));
+
+        let apiUrl = `${rootUrl}/v4/statuses/user_timeline.json?user_id=${id}&type=${type}`;
+        if (md5Key) {
+            apiUrl += `&${md5Key}=${pageUrl.searchParams.get(md5Key)}`;
+        }
+
         const response = await mainPage.evaluate(async (url) => {
             const response = await fetch(url);
             return response.json();
