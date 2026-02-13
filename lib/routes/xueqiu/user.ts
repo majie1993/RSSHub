@@ -48,7 +48,7 @@ async function handler(ctx) {
     };
 
     const link = `${rootUrl}/u/${id}`;
-    const token = await parseToken(link);
+    const token = await parseToken();
 
     const browser = await puppeteer();
     try {
@@ -59,12 +59,14 @@ async function handler(ctx) {
             Referer: link,
         });
 
-        await mainPage.goto(link, {
+        // 访问行情页建立会话（首页和用户页有阿里云 WAF 拦截）
+        await mainPage.goto(`${rootUrl}/hq`, {
             waitUntil: 'domcontentloaded',
         });
         await mainPage.waitForFunction(() => document.readyState === 'complete');
 
-        const apiUrl = `${rootUrl}/v4/statuses/user_timeline.json?user_id=${id}&type=${type}`;
+        // /v4/ 路径被 WAF 拦截，使用不带前缀的端点
+        const apiUrl = `${rootUrl}/statuses/user_timeline.json?user_id=${id}&type=${type}`;
         const response = await mainPage.evaluate(async (url) => {
             const response = await fetch(url);
             return response.json();

@@ -3,7 +3,7 @@ import cache from '@/utils/cache';
 import puppeteer from '@/utils/puppeteer';
 import { getCookies } from '@/utils/puppeteer-utils';
 
-export const parseToken = (link: string) =>
+export const parseToken = (_link?: string) =>
     cache.tryGet(
         'xueqiu:token',
         async () => {
@@ -13,7 +13,8 @@ export const parseToken = (link: string) =>
             page.on('request', (request) => {
                 request.resourceType() === 'document' ? request.continue() : request.abort();
             });
-            await page.goto(link, {
+            // 访问行情页获取 cookie（首页有阿里云 WAF 拦截）
+            await page.goto('https://xueqiu.com/hq', {
                 waitUntil: 'domcontentloaded',
             });
             await page.evaluate(() => document.documentElement.innerHTML);
